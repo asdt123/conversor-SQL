@@ -41,7 +41,18 @@ def create_table(start_date, end_date):
     INSERT INTO teste (
         name, identifier, wbc, lynp, midp, neup, eosp, monp, basp, rbc, hgb, hct, mcv, mch, mchc, rdw_cv, rdw_sd, plt, mpv, pct, pdw_cv, pdw_sd, plcr, plcc, updated_at
     ) 
-    SELECT name, identifier, wbc, lynp, midp, neup, eosp, monp, basp, rbc, hgb, hct, mcv, mch, mchc, rdw_cv, rdw_sd, plt, mpv, pct, pdw_cv, pdw_sd, plcr, plcc, updated_at FROM patients WHERE updated_at BETWEEN ? AND ? and not name LIKE '%Background%'   ''', (start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')))
+    SELECT name, identifier, wbc,
+        CASE WHEN lynp LIKE '%.%' THEN CAST(REPLACE(lynp, ' %', '') AS FLOAT) ELSE lynp END AS lynp,
+        CASE WHEN midp LIKE '%.%' THEN CAST(REPLACE(midp, ' %', '') AS FLOAT) ELSE midp END AS midp,
+        CASE WHEN neup LIKE '%.%' THEN CAST(REPLACE(neup, ' %', '') AS FLOAT) ELSE neup END AS neup,
+        CASE WHEN eosp LIKE '%.%' THEN CAST(REPLACE(eosp, ' %', '') AS FLOAT) ELSE eosp END AS eosp,
+        CASE WHEN monp LIKE '%.%' THEN CAST(REPLACE(monp, ' %', '') AS FLOAT) ELSE monp END AS monp,
+        CASE WHEN basp LIKE '%.%' THEN CAST(REPLACE(basp, ' %', '') AS FLOAT) ELSE basp END AS basp,
+        rbc, hgb, hct, mcv, mch, mchc, rdw_cv, rdw_sd, plt, mpv, pct, pdw_cv, pdw_sd, plcr, plcc, updated_at
+    FROM patients
+    WHERE updated_at BETWEEN ? AND ? AND NOT name LIKE '%Background%'
+''', (start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')))
+
 
     conn.commit()
     conn.close()
@@ -75,7 +86,7 @@ def export_to_csv():
     arquivo_saida+='.csv'
     with open(arquivo_saida, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(['name', 'identifier', 'wbc', 'lynp', 'midp', 'neup', 'neup', 'eosp', 'monp', 'rbc', 'hgb', 'hct', 'mcv', 'mch', 'mchc', 'rdw_cv', 'rdw_sd', 'plt', 'mpv', 'pct', 'pdw_cv', 'pdw_sd', 'plcr', 'plcc', 'updated_at'])
+        csvwriter.writerow(['name', 'identifier', 'wbc', 'lynp', 'midp', 'neup', 'eosp', 'monp', 'basp', 'rbc', 'hgb', 'hct', 'mcv', 'mch', 'mchc', 'rdw_cv', 'rdw_sd', 'plt', 'mpv', 'pct', 'pdw_cv', 'pdw_sd', 'plcr', 'plcc', 'updated_at'])
         csvwriter.writerows(rows)
 
     conn.close()
