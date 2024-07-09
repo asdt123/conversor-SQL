@@ -97,49 +97,14 @@ def export_to_csv():
     # Executar uma consulta para selecionar todos os dados da tabela 'teste'
     c.execute('SELECT * FROM teste')
     rows = c.fetchall()
-
-    # Solicitar o nome do arquivo ao usuário
-    arquivo_saida = input("Insira o nome do arquivo: ")
-    arquivo_saida += '.csv'
-    colunas = [
-            "name;", 'identifier', 'wbc', 'lynp', 'midp', 'neup', 'eosp', 'monp', 
-            'basp', 'rbc', 'hgb', 'hct', 'mcv', 'mch', 'mchc', 'rdw_cv', 'rdw_sd', 
-            'plt', 'mpv', 'pct', 'pdw_cv', 'pdw_sd', 'plcr', 'plcc', 'updated_at'
-        ]
-    # Abrir o arquivo CSV para escrita com newline='' e especificar o delimitador como vírgula
+    rows = [";".join(map(str, row)).replace('.', ',',22) for row in rows]
+    arquivo_saida =input("insira o nome do arquivo:")
+    arquivo_saida+='.csv'
     with open(arquivo_saida, 'w', newline='') as csvfile:
-        csvwriter = csv.writer(csvfile, delimiter=',')  # Especificar o delimitador como vírgula
-        # Escrever o cabeçalho no arquivo CSV
-        for coluna in colunas:
-            print(coluna)
-            csvwriter.writerow(coluna)
-        #  Escrever as linhas de dados no arquivo CSV
+        csvfile.write('name;identifier;wbc;lynp;midp;neup;eosp;monp;basp;rbc;hgb;hct;mcv;mch;mchc;rdw_cv;rdw_sd;plt;mpv;pct;pdw_cv;pdw_sd;plcr;plcc;updated_at\n')
         for row in rows:
-            separated_row = []
-            for value in row:
-                separated_value = convert_value(value)
-                separated_row.append(separated_value)
+            csvfile.write(row + '\n')
 
-            csvwriter.writerow(separated_row)
-    
-            # Abrir o arquivo de entrada e o arquivo de saída
-    with open(arquivo_saida, 'r', newline='', encoding='utf-8') as infile, \
-        open(arquivo_saida, 'w', newline='', encoding='utf-8') as outfile:
-
-        # Ler o arquivo CSV de entrada
-        reader = csv.reader(infile)
-        
-        # Escrever no arquivo CSV de saída
-        writer = csv.writer(outfile)
-        
-        # Iterar sobre cada linha do arquivo de entrada
-        for row in reader:
-            # Separar os dados por coluna
-            separated_data = [item.split(',') for item in row]
-            
-            # Escrever a linha separada no arquivo de saída
-            writer.writerows(separated_data)
-    # Fechar a conexão com o banco de dados
     conn.close()
 
 def main():
