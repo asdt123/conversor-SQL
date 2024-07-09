@@ -1,6 +1,19 @@
 import sqlite3
 import datetime
+import pandas as pd
 import csv
+import re
+
+# Função para tentar converter um valor para int, float ou manter como string
+def convert_value(value):
+    if isinstance(value, str):
+        # Verificar se o valor é um número inteiro
+        if re.match(r'^-?\d+$', value):
+            return int(value)
+        # Verificar se o valor é um número de ponto flutuante
+        elif re.match(r'^-?\d+\.\d+$', value):
+            return float(value)
+    return value
 
 def create_table(start_date, end_date):
     conn = sqlite3.connect('patients.db')
@@ -77,18 +90,56 @@ def get_dates():
             print("Formato de data inválido. Tente novamente.")
 
 def export_to_csv():
+    # Conectar ao banco de dados SQLite
     conn = sqlite3.connect('patients.db')
     c = conn.cursor()
 
+    # Executar uma consulta para selecionar todos os dados da tabela 'teste'
     c.execute('SELECT * FROM teste')
     rows = c.fetchall()
-    arquivo_saida =input("insira o nome do arquivo:")
-    arquivo_saida+='.csv'
-    with open(arquivo_saida, 'w', newline='') as csvfile:
-        csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(['name', 'identifier', 'wbc', 'lynp', 'midp', 'neup', 'eosp', 'monp', 'basp', 'rbc', 'hgb', 'hct', 'mcv', 'mch', 'mchc', 'rdw_cv', 'rdw_sd', 'plt', 'mpv', 'pct', 'pdw_cv', 'pdw_sd', 'plcr', 'plcc', 'updated_at'])
-        csvwriter.writerows(rows)
 
+    # Solicitar o nome do arquivo ao usuário
+    arquivo_saida = input("Insira o nome do arquivo: ")
+    arquivo_saida += '.csv'
+    colunas = [
+            "name;", 'identifier', 'wbc', 'lynp', 'midp', 'neup', 'eosp', 'monp', 
+            'basp', 'rbc', 'hgb', 'hct', 'mcv', 'mch', 'mchc', 'rdw_cv', 'rdw_sd', 
+            'plt', 'mpv', 'pct', 'pdw_cv', 'pdw_sd', 'plcr', 'plcc', 'updated_at'
+        ]
+    # Abrir o arquivo CSV para escrita com newline='' e especificar o delimitador como vírgula
+    with open(arquivo_saida, 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile, delimiter=',')  # Especificar o delimitador como vírgula
+        # Escrever o cabeçalho no arquivo CSV
+        for coluna in colunas:
+            print(coluna)
+            csvwriter.writerow(coluna)
+        #  Escrever as linhas de dados no arquivo CSV
+        for row in rows:
+            separated_row = []
+            for value in row:
+                separated_value = convert_value(value)
+                separated_row.append(separated_value)
+
+            csvwriter.writerow(separated_row)
+    
+            # Abrir o arquivo de entrada e o arquivo de saída
+    with open(arquivo_saida, 'r', newline='', encoding='utf-8') as infile, \
+        open(arquivo_saida, 'w', newline='', encoding='utf-8') as outfile:
+
+        # Ler o arquivo CSV de entrada
+        reader = csv.reader(infile)
+        
+        # Escrever no arquivo CSV de saída
+        writer = csv.writer(outfile)
+        
+        # Iterar sobre cada linha do arquivo de entrada
+        for row in reader:
+            # Separar os dados por coluna
+            separated_data = [item.split(',') for item in row]
+            
+            # Escrever a linha separada no arquivo de saída
+            writer.writerows(separated_data)
+    # Fechar a conexão com o banco de dados
     conn.close()
 
 def main():
